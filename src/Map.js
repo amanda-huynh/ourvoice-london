@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
-
-const containerStyle = {
-  width: '100%',
-  height: '400px',
-};
+import { GoogleMap, LoadScript, InfoWindow, Polyline } from '@react-google-maps/api';
+import "./Map.css"; 
 
 const center = {
-  lat: 51.5074,
-  lng: -0.1278,
+  lat: 51.515682,
+  lng: -0.070532,
 };
 
 const markers = [
   {
     id: 1,
-    name: "Walk Data 1",
-    image: "./ZS_Photo1.jpeg",
+    name: "1",
+    image: require("./assets/ZS_Photo1.jpeg"),
     contexts: [
         {
           context:
@@ -23,13 +19,13 @@ const markers = [
           createdAt: Date.now().toString(),
         },
     ],
-    type: "",
+    type: "gem",
     position: { lat: 51.517070, lng: -0.071350 },
   },
   {
     id: 2,
-    name: "Walk Data 2",
-    image: "./ZS_Photo2.jpeg",
+    name: "2",
+    image: require("./assets/ZS_Photo2.jpeg"),
     contexts: [
       {
         context:
@@ -42,8 +38,8 @@ const markers = [
   },
   {
     id: 3,
-    name: "Walk Data 3",
-    image: "./ZS_Photo3.jpeg",
+    name: "3",
+    image: require("./assets/ZS_Photo3.jpeg"),
     contexts: [
       {
         context:
@@ -56,8 +52,8 @@ const markers = [
   },
   {
     id: 4,
-    name: "Walk Data 4",
-    image: "./ZS_Photo4.jpeg",
+    name: "4",
+    image: require("./assets/ZS_Photo4.jpeg"),
     contexts: [
       {
         context:
@@ -73,8 +69,8 @@ const markers = [
   },
   {
     id: 5,
-    name: "Walk Data 5",
-    image: "./ZS_Photo5.jpeg",
+    name: "5",
+    image: require("./assets/ZS_Photo5.jpeg"),
     contexts: [
       {
         context:
@@ -92,33 +88,62 @@ const markers = [
 
 function Map() {
     const [map, setMap] = useState(null);
+    const [activeMarker, setActiveMarker] = useState(null);
 
     useEffect(() => {
         if (map) {
+            
         markers.forEach(marker => {
-            new window.google.maps.Marker({
-            position: marker.position,
-            map: map,
-            title: marker.name,
+            const googleMarker = new window.google.maps.Marker({
+                position: marker.position,
+                map: map,
+                title: marker.name,
+                label: marker.name,
+                icon: marker.type === "gem"
+                  ? {
+                    url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                    scaledSize: new window.google.maps.Size(50, 50),
+                  }
+                  : {
+                    url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                    scaledSize: new window.google.maps.Size(50, 50),
+                  },
+              });
+      
+              googleMarker.addListener("click", () => {
+                setActiveMarker(marker);
+              });
             });
-        });
         }
     }, [map]);
 
   return (
     <LoadScript googleMapsApiKey="AIzaSyD18lLqmsJDoSuhoLIhCE03-S1zymtj2eM">
-      <GoogleMap
-        mapContainerStyle={containerStyle}
+        <GoogleMap
+        mapContainerClassName="mapContainer"
         center={center}
-        zoom={13}
+        zoom={16}
         onLoad={map => setMap(map)}
-      >
-        {markers.map(({ id, name, position }) => (
-          <Marker key={id} position={position} label={name} />
-        ))}
-      </GoogleMap>
+        >
+        <Polyline path={markers.map((marker) => marker.position)} options={{ strokeColor: "blue", strokeOpacity: 1.0, strokeWeight: 4 }} />
+
+        {activeMarker && (
+            <InfoWindow
+            position={activeMarker.position}
+            onCloseClick={() => {
+                setActiveMarker(null);
+            }}
+            >
+            <div>
+                <h3>Walk Photo {activeMarker.name}</h3>
+                <img className="imageWindow" src={activeMarker.image} alt={activeMarker.name} />
+                <p>Transcription: {activeMarker.contexts[0].context}</p>
+            </div>
+            </InfoWindow>
+        )}
+        </GoogleMap>
     </LoadScript>
-  );
+    );
 }
 
 export default Map;
